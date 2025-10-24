@@ -2,11 +2,15 @@
 
 ![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Network](https://img.shields.io/badge/Network-MAINNET_ONLY-red?style=flat&logo=bitcoin)
 
-Aplikasi Bitcoin Wallet profesional yang dibangun menggunakan Go dengan arsitektur modular, clean code, dan dokumentasi lengkap.
+⚠️ **PRODUCTION WALLET - MAINNET ONLY - NO TESTNET**
+
+Aplikasi Bitcoin Wallet profesional untuk **transaksi Bitcoin REAL**, dibangun menggunakan Go dengan arsitektur modular, clean code, dan dokumentasi lengkap. Wallet ini dapat menerima Bitcoin dari exchange dan kompatibel dengan Phantom wallet.
 
 ## 📋 Daftar Isi
 
+- [Quick Start](#-quick-start)
 - [Fitur](#-fitur)
 - [Arsitektur](#-arsitektur)
 - [Instalasi](#-instalasi)
@@ -16,7 +20,45 @@ Aplikasi Bitcoin Wallet profesional yang dibangun menggunakan Go dengan arsitekt
 - [Keamanan](#-keamanan)
 - [Kontribusi](#-kontribusi)
 
+---
+
+## 🚀 Quick Start
+
+```bash
+# 1. Build wallet
+go build -o bin/go-wallet cmd/wallet/main.go
+
+# 2. Create mainnet wallet (REAL Bitcoin!)
+./bin/go-wallet create "My Bitcoin Wallet"
+
+# 3. Get your address (bc1... format)
+./bin/go-wallet receive <wallet-id>
+
+# 4. Sync balance from blockchain
+./bin/go-wallet sync <wallet-id>
+
+# 5. Export to Phantom wallet
+./bin/go-wallet export-wif <wallet-id>
+```
+
+**⚠️ CRITICAL:** This wallet operates on Bitcoin MAINNET. Any Bitcoin received is REAL money!
+
+📖 **Full Guide:** [MAINNET Setup Documentation](docs/MAINNET_SETUP.md)
+
 ## ✨ Fitur
+
+### 🔴 MAINNET ONLY - Production Bitcoin Wallet
+
+**⚠️ PENTING: Wallet ini untuk Bitcoin REAL, bukan testnet!**
+
+- 🔴 **MAINNET ONLY** - Tidak ada mode testing, langsung Bitcoin real
+- ✅ **Native SegWit (bc1...)** - Address modern dengan fee lebih murah
+- ✅ **Real Blockchain Sync** - Cek balance real dari Blockstream API
+- ✅ **Exchange Ready** - Terima Bitcoin dari Binance, Coinbase, Indodax, dll
+- ✅ **Phantom Compatible** - Export WIF untuk import ke Phantom wallet
+- ✅ **Hardware Wallet Ready** - Kompatibel dengan Ledger, Trezor
+
+### Core Features:
 
 - ✅ **Pembuatan Wallet Baru** - Generate wallet dengan pasangan kunci privat/publik otomatis
 - ✅ **Manajemen Multiple Wallet** - Kelola beberapa wallet dalam satu aplikasi

@@ -37,6 +37,8 @@ func main() {
 		handleList(walletService)
 	case "balance":
 		handleBalance(walletService)
+	case "sync":
+		handleSync(walletService)
 	case "send":
 		handleSend(walletService)
 	case "receive":
@@ -45,6 +47,8 @@ func main() {
 		handleHistory(walletService)
 	case "export":
 		handleExport(walletService)
+	case "export-wif":
+		handleExportWIF(walletService)
 	case "import":
 		handleImport(walletService)
 	case "delete":
@@ -63,13 +67,15 @@ func printUsage() {
 	fmt.Println("\nUsage:")
 	fmt.Println("  go-wallet <command> [arguments]")
 	fmt.Println("\nCommands:")
-	fmt.Println("  create <name>                          Create a new wallet")
+	fmt.Println("  create <name>                          Create a new wallet (SegWit bc1...)")
 	fmt.Println("  list                                   List all wallets")
-	fmt.Println("  balance <wallet-id>                    Get wallet balance")
+	fmt.Println("  balance <wallet-id>                    Get wallet balance (local)")
+	fmt.Println("  sync <wallet-id>                       Sync with blockchain (check real balance)")
 	fmt.Println("  send <from-id> <to-address> <amount> <fee> [note]  Send Bitcoin")
 	fmt.Println("  receive <to-id> <from-address> <amount> [note]     Receive Bitcoin")
 	fmt.Println("  history <wallet-id> [limit]            Get transaction history")
-	fmt.Println("  export <wallet-id>                     Export private key (USE WITH CAUTION!)")
+	fmt.Println("  export <wallet-id>                     Export private key (hex format)")
+	fmt.Println("  export-wif <wallet-id> [--testnet]     Export for Phantom import")
 	fmt.Println("  import <name> <private-key>            Import wallet from private key")
 	fmt.Println("  delete <wallet-id>                     Delete wallet")
 	fmt.Println("  help                                   Show this help message")
@@ -373,4 +379,77 @@ func handleDelete(service *service.WalletService) {
 	fmt.Printf("✓ Wallet deleted successfully!\n")
 	fmt.Printf("Deleted: %s (%s)\n", wallet.Name, wallet.Address)
 	fmt.Println("\n⚠️  Make sure you have backed up the private key if needed!")
+}
+
+func handleSync(service *service.WalletService) {
+	if len(os.Args) < 3 {
+		fmt.Println("Error: wallet ID is required")
+		fmt.Println("Usage: go-wallet sync <wallet-id>")
+		os.Exit(1)
+	}
+
+	walletID := os.Args[2]
+
+	fmt.Println("🔄 Syncing wallet with Bitcoin blockchain (MAINNET)...")
+	fmt.Println("⚠️  WARNING: This is REAL Bitcoin mainnet - not test network")
+	fmt.Println()
+
+	// Sync wallet with blockchain
+	wallet, err := service.SyncWallet(walletID)
+	if err != nil {
+		fmt.Printf("❌ Error syncing wallet: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("✅ Wallet synced successfully!")
+	fmt.Printf("\n📊 Wallet Details:\n")
+	fmt.Printf("   Name:     %s\n", wallet.Name)
+	fmt.Printf("   Address:  %s\n", wallet.Address)
+	fmt.Printf("   Balance:  %.8f BTC\n", wallet.Balance)
+	fmt.Printf("   Updated:  %s\n", wallet.UpdatedAt.Format("2006-01-02 15:04:05"))
+	fmt.Println()
+	fmt.Printf("🔍 View on blockchain: https://blockstream.info/address/%s\n", wallet.Address)
+}
+
+func handleExportWIF(service *service.WalletService) {
+	if len(os.Args) < 3 {
+		fmt.Println("Error: wallet ID is required")
+		fmt.Println("Usage: go-wallet export-wif <wallet-id> [--testnet]")
+		os.Exit(1)
+	}
+
+	walletID := os.Args[2]
+	testnet := false
+
+	if len(os.Args) > 3 && os.Args[3] == "--testnet" {
+		testnet = true
+	}
+
+	wallet, err := service.GetWallet(walletID)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Convert to WIF format for Phantom import
+	fmt.Println("\n⚠️  WARNING: KEEP THIS PRIVATE KEY SECURE!")
+	fmt.Println("This is your WIF (Wallet Import Format) key")
+	fmt.Println("Use this to import into Phantom or other Bitcoin wallets")
+
+	network := "mainnet"
+	if testnet {
+		network = "testnet"
+	}
+
+	fmt.Printf("\n=== WIF Private Key Export (%s) ===\n", network)
+	fmt.Printf("Wallet:      %s (%s)\n", wallet.Name, wallet.ID)
+	fmt.Printf("Address:     %s\n", wallet.Address)
+	fmt.Printf("Private Key (hex): %s\n", wallet.PrivateKey)
+	fmt.Println("\n📋 To import to Phantom:")
+	fmt.Println("1. Open Phantom")
+	fmt.Println("2. Settings → Add/Connect Wallet")
+	fmt.Println("3. Choose 'Import Private Key'")
+	fmt.Println("4. Select Bitcoin network")
+	fmt.Println("5. Paste the private key above")
+	fmt.Println("\n⚠️  Do NOT share this key with anyone!")
 }

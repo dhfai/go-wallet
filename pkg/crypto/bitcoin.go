@@ -136,7 +136,7 @@ func (bc *BitcoinCrypto) VerifySignature(txHash, signatureHex, publicKeyHex stri
 }
 
 func (bc *BitcoinCrypto) base58Encode(input []byte) string {
-	const base58Alphabet = "" // Bitcoin Base58 alphabets
+	const base58Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz" // Bitcoin Base58 alphabets
 
 	x := new(big.Int).SetBytes(input)
 

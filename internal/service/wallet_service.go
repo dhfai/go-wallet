@@ -6,6 +6,7 @@ import (
 
 	"github.com/dhfai/go-wallet/internal/domain"
 	"github.com/dhfai/go-wallet/pkg/crypto"
+	"github.com/dhfai/go-wallet/pkg/network"
 	"github.com/google/uuid"
 )
 
@@ -50,8 +51,8 @@ func (s *WalletService) CreateWallet(name string) (*domain.Wallet, error) {
 		return nil, fmt.Errorf("%w: %v", domain.ErrKeyGeneration, err)
 	}
 
-	// Generate Bitcoin address
-	address, err := s.crypto.GenerateAddress(publicKey)
+	// Generate Native SegWit address (bc1...) - Compatible with Phantom & Exchanges
+	address, err := s.crypto.GenerateSegWitAddress(publicKey)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", domain.ErrKeyGeneration, err)
 	}
@@ -309,6 +310,36 @@ func (s *WalletService) ImportWallet(name, privateKeyHex string) (*domain.Wallet
 
 	// Save to repository
 	if err := s.repo.Save(wallet); err != nil {
+		return nil, fmt.Errorf("%w: %v", domain.ErrStorageOperation, err)
+	}
+
+	return wallet, nil
+}
+
+// SyncWallet syncs wallet balance and transactions with the Bitcoin blockchain (MAINNET ONLY)
+// SyncWallet sinkronisasi saldo wallet dan transaksi dengan blockchain Bitcoin (MAINNET SAJA)
+func (s *WalletService) SyncWallet(walletID string) (*domain.Wallet, error) {
+	// Get wallet from repository
+	wallet, err := s.repo.FindByID(walletID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create blockchain explorer (MAINNET ONLY)
+	explorer := network.NewBlockchainExplorer()
+
+	// Get balance from blockchain
+	balance, err := explorer.GetBalance(wallet.Address)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch balance from blockchain: %w", err)
+	}
+
+	// Update wallet balance
+	wallet.Balance = balance
+	wallet.UpdatedAt = time.Now()
+
+	// Save updated wallet
+	if err := s.repo.Update(wallet); err != nil {
 		return nil, fmt.Errorf("%w: %v", domain.ErrStorageOperation, err)
 	}
 
